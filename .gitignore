@@ -1,0 +1,28 @@
+.codex
+.local/
+logs/
+
+# Python/editor noise.
+__pycache__/
+*.py[cod]
+*~
+
+# Logs and generated build output.
+*.log
+*.o
+*.d
+*.elf
+*.hex
+*.objdump
+*.mmap
+*.mmap.remapped
+*.wtrace.*
+
+# Local SPARC crosstool-NG build products.
+sparc_ctng/crosstool-ng/
+sparc_ctng/ctng-install/
+sparc_ctng/work/
+sparc_ctng/x-tools/
+
+# CORTOS generated outputs.
+**/cortos_build/

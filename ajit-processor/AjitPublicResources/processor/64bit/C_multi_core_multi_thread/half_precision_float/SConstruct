@@ -1,0 +1,20 @@
+import os
+SConscript(['aa2clib/SConscript'])
+
+env = Environment(ENV = {'PATH' : os.environ['PATH']})
+
+AHIR_RELEASE=os.environ['AHIR_RELEASE']
+AHIR_INCLUDE=AHIR_RELEASE+"/include"
+AHIR_LIB=AHIR_RELEASE+"/lib"
+
+
+COMPILATION_FLAGS = ' -g -std=gnu11 '
+
+env.Append(CPPPATH = './src/:./include:./aa2clib/include:')
+env.Append(CPPPATH = AHIR_INCLUDE)
+
+env.Library('./lib/libHalfPrecisionFloat', Glob('src/*.c'), CCFLAGS=COMPILATION_FLAGS)
+
+LIBS=[ 'HalfPrecisionFloat', 'FpExecAa', 'BitVectors', 'SockPipes',  'PipeHandler', 'pthread']
+LIBPATH=[ './lib', './aa2clib/lib', AHIR_LIB ]
+env.Program('./bin/test_half', ['./util/test_half.c', './util/pthread_yield_compat.c'], CCFLAGS=COMPILATION_FLAGS, LINKFLAGS='-no-pie', LIBS=LIBS, LIBPATH=LIBPATH);
