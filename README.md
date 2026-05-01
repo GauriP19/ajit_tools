@@ -2,6 +2,7 @@
 
 This workspace contains the AJIT/SPARC-V8 processor tools, documentation,
 cross-toolchain setup, RTOS code, and validation tests.
+Tested to work on Ubuntu 25.10. Requires sudo privileges to install build dependencies. 
 
 ## Layout
 
