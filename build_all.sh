@@ -21,10 +21,14 @@ build_python36() {
   echo "Installing Python ${PYTHON36_VERSION} under ${PYTHON36_HOME}"
   echo "This does not replace or modify the system Python."
 
-  # Install packages needed to compile Python and native extensions.
+  # Install host packages needed to compile Python, native extensions, and
+  # the crosstool-NG/AJIT build.
   sudo apt update || return 1
   sudo apt install -y \
-    build-essential make curl wget \
+    build-essential make curl wget ca-certificates git \
+    autoconf automake libtool libtool-bin gperf bison flex \
+    texinfo help2man gawk bzip2 unzip patch rsync \
+    meson ninja-build python3-dev \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
     libsqlite3-dev libffi-dev libncurses-dev libncursesw5-dev \
     xz-utils tk-dev liblzma-dev || return 1
@@ -57,11 +61,15 @@ build_python36() {
   "${PYTHON36_HOME}/bin/python3.6" -E -m pip install "SCons==${SCONS_VERSION}" || return 1
   export PATH="${PYTHON36_HOME}/bin:${PATH}"
 
+  "${PYTHON36_HOME}/bin/python3.6" -m pip install "PyYAML<6"
+
+
   # Verify the Python install before starting the larger builds.
   "${PYTHON36_HOME}/bin/python3.6" -E --version || return 1
   "${PYTHON36_HOME}/bin/python3.6" -E -c "import ctypes, math, ssl, sqlite3" || return 1
   "${PYTHON36_HOME}/bin/python3.6" -E -m SCons --version || return 1
   "${PYTHON36_HOME}/bin/scons" --version || return 1
+  "${PYTHON36_HOME}/bin/python3.6" -c "import yaml; print(yaml.__version__)" || return 1
 }
 
 mkdir -p "${LOG_DIR}" || exit 1

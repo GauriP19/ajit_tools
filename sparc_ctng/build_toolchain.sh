@@ -7,9 +7,6 @@ CTNG_SRC_DIR="$SCRIPT_DIR/crosstool-ng"
 CTNG_INSTALL_DIR="$SCRIPT_DIR/ctng-install"
 WORK_DIR="$SCRIPT_DIR/work"
 
-# Install host packages required by crosstool-NG.
-"$SCRIPT_DIR/install-ubuntu-deps.sh" || exit 1
-
 # crosstool-NG aborts if LD_LIBRARY_PATH is set.
 if [ -n "${LD_LIBRARY_PATH:-}" ]; then
     echo "Warning: unsetting LD_LIBRARY_PATH for crosstool-NG."
