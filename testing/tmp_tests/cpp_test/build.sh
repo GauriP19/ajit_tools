@@ -1,35 +1,51 @@
 #!/usr/bin/env bash
 
-TOOLCHAIN_ROOT=/home/sparcv8/ajit_tools/sparc_ctng/x-tools
+MAIN=basic
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+AJIT_TOOLS_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+TOOLCHAIN_ROOT="${TOOLCHAIN_ROOT:-$AJIT_TOOLS_ROOT/sparc_ctng/x-tools/sparc-ajit-linux-uclibc}"
 TARGET=sparc-linux
-BIN=$TOOLCHAIN_ROOT/sparc-unknown-linux-uclibc/bin
+BIN="$TOOLCHAIN_ROOT/bin"
+SYSROOT="$TOOLCHAIN_ROOT/sparc-ajit-linux-uclibc/sysroot"
+AAR="$AJIT_TOOLS_ROOT/ajit-processor/AjitPublicResources/tools/ajit_access_routines"
+PT="$AJIT_TOOLS_ROOT/ajit-processor/AjitPublicResources/tools/minimal_printf_timer"
 
-CXX=$BIN/$TARGET-g++
-AS=$BIN/$TARGET-as
-AR=$BIN/$TARGET-ar
-LD=$BIN/$TARGET-ld
-NM=$BIN/$TARGET-nm
-SIZE=$BIN/$TARGET-size
-OBJDUMP=$BIN/$TARGET-objdump
-OBJCOPY=$BIN/$TARGET-objcopy
-READELF=$BIN/$TARGET-readelf
+export PATH="$BIN:$AJIT_TOOLS_ROOT/ajit-processor/AjitPublicResources/tools/scripts:$AJIT_TOOLS_ROOT/ajit-processor/AjitPublicResources/tools/genVmapAsm/bin:$AJIT_TOOLS_ROOT/ajit-processor/AjitPublicResources/tools/misc/bin:$PATH"
+export AJIT_UCLIBC_INSTALL_DIR="${AJIT_UCLIBC_INSTALL_DIR:-$SYSROOT/usr}"
+export AJIT_UCLIBC_HEADERS_DIR="${AJIT_UCLIBC_HEADERS_DIR:-$SYSROOT/usr/include}"
+export AJIT_LIBGCC_INSTALL_DIR="${AJIT_LIBGCC_INSTALL_DIR:-$TOOLCHAIN_ROOT/lib/gcc/sparc-ajit-linux-uclibc/15.2.0}"
 
-OUT=build
+CXX="${CXX:-$BIN/$TARGET-g++}"
 
-mkdir -p $OUT
+cd "$SCRIPT_DIR"
 
-$CXX -std=c++11 -O2 -Wall -Wextra -ffreestanding -fno-exceptions -fno-rtti -c src/basic.cpp -o $OUT/basic.o
-$AS src/start.S -o $OUT/start.o
-$AR rcs $OUT/libbasic.a $OUT/basic.o
-$LD -T linker.ld $OUT/start.o $OUT/libbasic.a -o $OUT/basic.elf
+# The AJIT bare-metal compiler wrapper handles C and assembly. Compile the
+# C++ test to assembly first, then feed that assembly into the normal flow.
+"$CXX" -std=c++11 -O2 -Wall -Wextra -m32 -mcpu=v8 \
+  -ffreestanding -fno-exceptions -fno-rtti -fno-threadsafe-statics \
+  -fno-use-cxa-atexit -fno-asynchronous-unwind-tables \
+  -D USE_VMAP \
+  -S src/basic.cpp -o basic_cpp.s
 
-$NM $OUT/basic.elf > $OUT/basic.nm
-$SIZE $OUT/basic.elf > $OUT/basic.size
-$OBJDUMP -d $OUT/basic.elf > $OUT/basic.dump
-$READELF -h $OUT/basic.elf > $OUT/basic.readelf
-$OBJCOPY -O binary $OUT/basic.elf $OUT/basic.bin
+compileToSparcUclibc.py \
+  -I "$AJIT_UCLIBC_HEADERS_DIR" \
+  -I ./ \
+  -I "$AAR/include" \
+  -I "$PT/include" \
+  -V vmap.txt \
+  -s init.s \
+  -s trap_handlers.s \
+  -s "$AAR/asm/mutexes.s" \
+  -s basic_cpp.s \
+  -C "$AAR/src" \
+  -C "$PT/src" \
+  -N "$MAIN" \
+  -L LinkerScript.lnk \
+  -D AJIT \
+  -D USE_VMAP \
+  -U
 
-echo "built $OUT/basic.elf"
-echo "wrote $OUT/basic.bin"
-echo "wrote $OUT/basic.dump"
-echo "wrote $OUT/basic.readelf"
+echo "built $MAIN.elf"
+echo "wrote $MAIN.mmap"
+echo "wrote $MAIN.mmap.remapped"
