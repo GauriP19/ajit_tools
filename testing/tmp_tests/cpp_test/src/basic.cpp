@@ -1,6 +1,8 @@
+#include <stdint.h>
+
 extern "C" {
-void ajit_serial_init();
-int ee_printf(const char *fmt, ...);
+#include "ajit_access_routines.h"
+#include "core_portme.h"
 }
 
 class Accumulator {
@@ -26,7 +28,7 @@ int main()
         acc.add_square(i);
     }
 
-    ajit_serial_init();
+    __ajit_write_serial_control_register__(TX_ENABLE);
 
     int total = acc.value();
     if (total == 55) {

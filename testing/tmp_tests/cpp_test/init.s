@@ -32,7 +32,3 @@ _start:
 	nop
 
 	ta 0
-
-.section .text.__ajit_sync_vars_array
-AJIT_SYNC_VARS_ARRAY: .skip 512
-
