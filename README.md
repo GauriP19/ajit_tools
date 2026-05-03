@@ -29,7 +29,7 @@ source ./ajit_env
 
 `build_all.sh` installs required Ubuntu packages with `apt`, builds a local
 Python 3.6.15 under `.local/`, installs SCons, builds the SPARC cross-toolchain
-under `sparc_ctng/x-tools/`, and then builds the AJIT public resources.
+under `sparc_ctng/x-tools/`, and then builds the AjitPublicResources.
 
 For later shells, run:
 
@@ -54,12 +54,7 @@ cd ajit-processor/AjitPublicResources
 ./build.sh
 ```
 
-## Tests
-
-
 ## More Documentation
 
 - Toolchain details: `sparc_ctng/README.md`
-- Test notes: `testing/tests/README.md`
-- Architecture and processor manuals: `docs/arch/`, `docs/processor/`, and
-  `docs/processors/`
+- Architecture and processor manuals: `docs/`
