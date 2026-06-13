@@ -1,93 +1,80 @@
 # Ubuntu 22.04 Docker Setup for AJIT Tools
 
-This directory keeps the host clean while building `ajit_tools` in an exact
-Ubuntu 22.04 userspace. The source tree stays on the host and is bind-mounted
-into the container, so VS Code, Vim, git, and normal host tools keep working on
-the same files.
+This directory builds `ajit_tools` inside an Ubuntu 22.04 Docker container while
+keeping the source tree on the host. The repository is bind-mounted into the
+container at `/workspace/ajit_tools`, so edits made on the host are visible in
+the container and build output remains in the same checkout.
 
-The build runs inside Docker as a non-root user with the host UID/GID. Files
-created by Python, crosstool-NG, SCons, and AJIT build scripts should therefore
-remain editable and deletable from the host without `sudo`.
+The container user is created with the host UID/GID. Files produced by the AJIT
+build should therefore remain editable from the host without `sudo`.
 
-## Design
+## Build Instructions
 
-1. Install Docker Engine on the Ubuntu host and add the current user to the
-   `docker` group.
-2. Build an `ubuntu:22.04` image containing all package dependencies needed by
-   `build_all.sh`.
-3. Start a persistent container with this repository mounted at
-   `/workspace/ajit_tools`.
-4. Run `./build_all.sh` in the container with `AJIT_SKIP_APT=1`, so dependency
-   installation happens only in the image layer and the actual toolchain build
-   runs as the non-root mapped user.
+Run all commands below from the `docker/` directory:
 
-## Script Breakdown
+```bash
+cd docker
+```
 
-- `install-docker-engine.sh`
-  Internal helper used by `setup-and-build.sh`. It
-  installs Docker Engine from Docker's official Ubuntu apt repository, creates
-  the `docker` group if needed, and adds the current user to it.
+### 1. Install Docker Engine
 
-- `build-image.sh`
-  Internal helper used by `setup-and-build.sh`. It builds
-  `ajit-tools-ubuntu22:latest` from `Dockerfile` and passes the current host
-  UID/GID into the image so the container user matches the host user.
+Install Docker Engine and add the current user to the `docker` group:
 
-- `setup-and-build.sh`
-  User-facing wrapper. It installs or refreshes Docker Engine, verifies the
-  user can run Docker, builds the image, starts the persistent container, runs
-  the AJIT build, opens an interactive shell, starts the container, or prints
-  logs.
+```bash
+./install-docker-engine.sh
+```
 
-- `open-container.sh`
-  Post-build helper. It starts the existing container and opens an interactive
-  shell at `/workspace/ajit_tools` without reinstalling Docker or rebuilding
-  the image.
+The script uses Docker's official Ubuntu apt repository, installs Docker Engine,
+creates the `docker` group if needed, and adds your user to that group.
 
-- `process_logs/`
-  Stores timestamped logs from the helper scripts.
+### 2. Log Out And Log Back In
 
-## One-command Host Setup and Build
+After the install script finishes, log out of the host session and log back in so
+the new `docker` group membership takes effect.
 
-From this directory:
+As a short-term alternative for the current terminal, you can run:
+
+```bash
+newgrp docker
+```
+
+Verify Docker works without `sudo`:
+
+```bash
+docker info
+```
+
+### 3. Build The Image And Run The AJIT Build
+
+Run the setup/build wrapper:
 
 ```bash
 ./setup-and-build.sh
 ```
 
-If Docker was just installed, the script may stop after adding the user to the
-`docker` group. Start a new login shell, or run `newgrp docker`, then run the
-same command again.
+This does the full build flow:
 
-Open an interactive shell in the container:
+1. Verifies Docker is installed and usable by the current user.
+2. Builds the `ajit-tools-ubuntu22:latest` image from `Dockerfile`.
+3. Starts a persistent container named `ajit-tools-ubuntu22`.
+4. Mounts the repository at `/workspace/ajit_tools`.
+5. Runs `./build_all.sh` inside the container with `AJIT_SKIP_APT=1`.
+
+
+If `./setup-and-build.sh` reports that Docker is installed but the current shell
+cannot use it yet, log out and back in, or run `newgrp docker`, then rerun:
+
+```bash
+./setup-and-build.sh
+```
+
+### 4. Open The Existing Container When Needed
+
+After the container exists, open an interactive shell in it with:
 
 ```bash
 ./open-container.sh
 ```
 
-Start the existing container without running a build:
-
-```bash
-./setup-and-build.sh start
-```
-
-Print wrapper process logs and Docker container logs:
-
-```bash
-./setup-and-build.sh logs
-```
-
-The important log locations are:
-
-- `docker/process_logs/*.txt`
-- `logs/python36-build.log`
-- `sparc_ctng/work/build.log`
-
-## Custom Names
-
-Override image or container names with environment variables:
-
-```bash
-IMAGE_NAME=my-ajit-ubuntu22 IMAGE_TAG=test ./setup-and-build.sh
-CONTAINER_NAME=my-ajit-container ./setup-and-build.sh start
-```
+This starts the existing `ajit-tools-ubuntu22` container if needed and opens a
+shell in `/workspace/ajit_tools`.
