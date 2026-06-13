@@ -2,7 +2,10 @@
 
 This workspace contains the AJIT/SPARC-V8 processor tools, documentation,
 cross-toolchain setup, RTOS code, and validation tests.
-Tested to work on Ubuntu 25.10. Requires sudo privileges to install build dependencies. 
+
+For reproducible builds, use the Ubuntu 22.04 Docker setup under `docker/`.
+You can also build directly on the host by running `./build_all.sh`, but that
+requires sudo privileges to install packages.
 
 ## Layout
 
@@ -36,6 +39,24 @@ For later shells, run:
 ```bash
 source ./ajit_env
 ```
+
+Clean outputs produced by `build_all.sh`:
+
+```bash
+./clean.sh
+```
+
+## Ubuntu 22.04 Docker Setup
+
+For the Docker build flow, go into the Docker directory and run the wrapper:
+
+```bash
+cd docker
+./setup-and-build.sh
+```
+
+See `docker/README.md` for the full Docker workflow, post-build container
+access, and log locations.
 
 ## Building Pieces Manually
 

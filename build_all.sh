@@ -21,17 +21,21 @@ build_python36() {
   echo "Installing Python ${PYTHON36_VERSION} under ${PYTHON36_HOME}"
   echo "This does not replace or modify the system Python."
 
-  # Install host packages needed to compile Python, native extensions, and
-  # the crosstool-NG/AJIT build.
-  sudo apt update || return 1
-  sudo apt install -y \
-    build-essential make curl wget ca-certificates git \
-    autoconf automake libtool libtool-bin gperf bison flex \
-    texinfo help2man gawk bzip2 unzip patch rsync \
-    meson ninja-build python3-dev \
-    libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
-    libsqlite3-dev libffi-dev libncurses-dev libncursesw5-dev \
-    xz-utils tk-dev liblzma-dev || return 1
+  if [ "${AJIT_SKIP_APT:-0}" = "1" ]; then
+    echo "Skipping apt package installation because AJIT_SKIP_APT=1."
+  else
+    # Install host packages needed to compile Python, native extensions, and
+    # the crosstool-NG/AJIT build.
+    sudo apt update || return 1
+    sudo apt install -y \
+      build-essential make curl wget ca-certificates git \
+      autoconf automake libtool libtool-bin gperf bison flex \
+      texinfo help2man gawk bzip2 unzip patch rsync \
+      meson ninja-build python3-dev \
+      libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
+      libsqlite3-dev libffi-dev libncurses-dev libncursesw5-dev \
+      xz-utils tk-dev liblzma-dev || return 1
+  fi
 
   # Rebuild the private Python install from scratch. This removes only the
   # temporary build directory and ${AJIT_HOME}/.local/python-${PYTHON36_VERSION};

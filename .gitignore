@@ -9,6 +9,7 @@ __pycache__/
 
 # Logs and generated build output.
 *.log
+docker/process_logs/*.txt
 *.o
 *.d
 *.elf

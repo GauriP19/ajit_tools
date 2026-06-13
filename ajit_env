@@ -140,7 +140,14 @@ export AJIT_C_REF_MODEL=$AJIT_CMODEL_DIR;
 export AJIT_PROJECT_CROSS_COMPILER=sparc-linux
 
 export AJIT_UCLIBC_INSTALL_DIR=$AJIT_UCLIBC_LIB_DIR/..;
-export AJIT_LIBGCC_INSTALL_DIR=$AJIT_BUILDROOT_DIR/lib/gcc/$AJIT_TOOLCHAIN_TARGET/15.2.0;
+AJIT_LIBGCC_FILE="$($AJIT_BUILDROOT_BIN_DIR/sparc-linux-gcc -print-libgcc-file-name 2>/dev/null)";
+if [ -n "$AJIT_LIBGCC_FILE" ] && [ -f "$AJIT_LIBGCC_FILE" ]; then
+    export AJIT_LIBGCC_INSTALL_DIR="${AJIT_LIBGCC_FILE%/libgcc.a}";
+else
+    AJIT_LIBGCC_BASE_DIR=$AJIT_BUILDROOT_DIR/lib/gcc/$AJIT_TOOLCHAIN_TARGET;
+    AJIT_LIBGCC_VERSION="$(find "$AJIT_LIBGCC_BASE_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort -V | tail -n 1)";
+    export AJIT_LIBGCC_INSTALL_DIR="$AJIT_LIBGCC_BASE_DIR/$AJIT_LIBGCC_VERSION";
+fi
 
 # Original:
 # export AJIT_UCLIBC_HEADERS=$AJIT_BUILDROOT_DIR/output/build/host-binutils-2.22/include;
